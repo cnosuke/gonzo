@@ -21,7 +21,7 @@ deps:
 test:
 	go test -v ./...
 
-build-docker: build-for-docker build-static copy-static-from-client
+build-docker: build-for-docker
 	docker build -t cnosuke/gonzo:latest .
 
 push-docker: build-docker
