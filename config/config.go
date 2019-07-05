@@ -9,7 +9,7 @@ type Config struct {
 	BucketName          string `required:"true" env:"BUCKET_NAME"`
 	KeyPrefix           string `default:"" env:"KEY_PREFIX"`
 	DefaultPresignedTTL int    `default:"60" env:"DEFAULT_PRESIGNED_TTL"`
-	CorsHost            string `default:"" env:"CORS_HOST"`
+	DownloadHost string `default:"" env:"DOWNLOAD_HOST"`
 }
 
 func NewConfig(path string) (*Config, error) {
@@ -17,10 +17,6 @@ func NewConfig(path string) (*Config, error) {
 
 	if err := configor.Load(c, path); err != nil {
 		return nil, err
-	}
-
-	if c.CorsHost == "" {
-		c.CorsHost = "*"
 	}
 
 	return c, nil

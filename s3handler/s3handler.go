@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/cnosuke/gonzo/entity"
-	uuid "github.com/satori/go.uuid"
 )
 
 type S3Handler struct {
@@ -19,9 +18,10 @@ type S3Handler struct {
 	bucket              string
 	keyPrefix           string
 	defaultPresignedTTL time.Duration
+	downloadHost string
 }
 
-func NewS3Handler(ctx context.Context, awsRegion string, bucket string, keyPrefix string, defaultPresignedTTL int) *S3Handler {
+func NewS3Handler(ctx context.Context, awsRegion, bucket, keyPrefix, downloadHost string, defaultPresignedTTL int) *S3Handler {
 	sess := session.Must(
 		session.NewSession(&aws.Config{Region: aws.String(awsRegion)}),
 	)
@@ -32,22 +32,16 @@ func NewS3Handler(ctx context.Context, awsRegion string, bucket string, keyPrefi
 		bucket:              bucket,
 		keyPrefix:           keyPrefix,
 		defaultPresignedTTL: time.Duration(defaultPresignedTTL) * time.Second,
+		downloadHost: downloadHost,
 	}
 }
 
-func (s *S3Handler) CreatePresignedPostUrl(filename string, contentType string, prefix string) (*entity.PresignedPostUrl, error) {
-	return s.CreatePresignedPostUrlWithTTL(filename, contentType, prefix, s.defaultPresignedTTL)
+func (s *S3Handler) CreatePresignedPostUrl(filename string, contentType string) (*entity.PresignedPostUrl, error) {
+	return s.CreatePresignedPostUrlWithTTL(filename, contentType, s.defaultPresignedTTL)
 }
 
-func (s *S3Handler) CreatePresignedPostUrlWithTTL(filename string, contentType string, prefix string, ttl time.Duration) (*entity.PresignedPostUrl, error) {
-	id := uuid.NewV4().String()
-
-	var key string
-	if len(prefix) > 0 {
-		key = filepath.Join(s.keyPrefix, prefix, id, filename)
-	} else {
-		key = filepath.Join(s.keyPrefix, id, filename)
-	}
+func (s *S3Handler) CreatePresignedPostUrlWithTTL(filename string, contentType string, ttl time.Duration) (*entity.PresignedPostUrl, error) {
+	key := filepath.Join(s.keyPrefix, filename)
 
 	req, _ := s.svc.PutObjectRequest(&s3.PutObjectInput{
 		Bucket:      aws.String(s.bucket),
@@ -65,7 +59,6 @@ func (s *S3Handler) CreatePresignedPostUrlWithTTL(filename string, contentType s
 		Url:               str,
 		Ttl:               ttl,
 		Key:               key,
-		Id:                id,
 		Filename:          filename,
 		ContentType:       contentType,
 		PublicDownloadUrl: s.CreatePublicACLDownloadURL(key),
@@ -73,5 +66,9 @@ func (s *S3Handler) CreatePresignedPostUrlWithTTL(filename string, contentType s
 }
 
 func (s *S3Handler) CreatePublicACLDownloadURL(key string) string {
-	return fmt.Sprintf("https://%s.s3.amazonaws.com/%s", s.bucket, key)
+	if len(s.downloadHost) > 0 {
+		return fmt.Sprintf("%s/%s", s.downloadHost, key)
+	} else {
+		return fmt.Sprintf("https://%s.s3.amazonaws.com/%s", s.bucket, key)
+	}
 }

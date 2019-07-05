@@ -9,6 +9,7 @@ require (
 	github.com/k0kubun/pp v3.0.1+incompatible
 	github.com/mattn/go-colorable v0.1.2 // indirect
 	github.com/satori/go.uuid v1.2.0
+	github.com/segmentio/ksuid v1.0.2
 	github.com/urfave/cli v1.20.0
 	go.uber.org/atomic v1.4.0 // indirect
 	go.uber.org/multierr v1.1.0 // indirect

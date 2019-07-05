@@ -14,11 +14,10 @@ import (
 )
 
 type Handler struct {
-	router   *mux.Router
-	context  context.Context
-	chain    alice.Chain
-	s3       *s3handler.S3Handler
-	corsHost string
+	router  *mux.Router
+	context context.Context
+	chain   alice.Chain
+	s3      *s3handler.S3Handler
 }
 
 type ErrorResponse struct {
@@ -30,14 +29,14 @@ func NewHandler(ctx context.Context, conf *config.Config) *Handler {
 	r := mux.NewRouter()
 
 	h := &Handler{
-		context:  ctx,
-		router:   r,
-		corsHost: conf.CorsHost,
+		context: ctx,
+		router:  r,
 		s3: s3handler.NewS3Handler(
 			ctx,
 			conf.AwsRegion,
 			conf.BucketName,
 			conf.KeyPrefix,
+			conf.DownloadHost,
 			conf.DefaultPresignedTTL,
 		),
 	}
